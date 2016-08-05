@@ -12,15 +12,20 @@ export function activate(context: vscode.ExtensionContext) {
     function linkIssues(repo: string) {
         let provider = {
             provideDocumentLinks: function(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.DocumentLink[] {
-                let re = /#(\d+)/g
+                let re = /([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
                 let txt = document.getText()
                 let res: vscode.DocumentLink[] = []
                 var match
                 while ((match = re.exec(txt)) !== null) {
                     let p = document.positionAt(match.index)
-                    let r = new vscode.Range(p, p.translate(0, match[1].length+1))
-                    let uri = vscode.Uri.parse("https://github.com/"+repo+"/issues/"+match[1])
-                    res.push(new vscode.DocumentLink(r, uri))
+                    let r = new vscode.Range(p, p.translate(0, match[0].length+1))
+                    if (match[1]) {
+                        let uri = vscode.Uri.parse("https://github.com/"+match[1]+"/issues/"+match[2])
+                        res.push(new vscode.DocumentLink(r, uri))
+                    } else if (repo.length > 0) {
+                        let uri = vscode.Uri.parse("https://github.com/"+repo+"/issues/"+match[2])
+                        res.push(new vscode.DocumentLink(r, uri))
+                    }
                 }
                 return res
             }
@@ -32,9 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let gconfig = path.join(vscode.workspace.rootPath, '.git', 'config')
     fs.readFile(gconfig, 'utf-8', (err, data) => {
-        if (err) {
-            return
-        }
+        if (err == null) {
         for (let line of data.split('\n')) {
             let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)(?:\.git|$)/.exec(line)
             if (match) {
@@ -43,6 +46,8 @@ export function activate(context: vscode.ExtensionContext) {
                 return
             }
         }
+        }
+        linkIssues("")
     })
 }
 
