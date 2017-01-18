@@ -34,21 +34,22 @@ export function activate(context: vscode.ExtensionContext) {
         let dispose = vscode.languages.registerDocumentLinkProvider('go', provider);
         context.subscriptions.push(dispose);
     }
-
-    let gconfig = path.join(vscode.workspace.rootPath, '.git', 'config')
-    fs.readFile(gconfig, 'utf-8', (err, data) => {
-        if (err == null) {
-        for (let line of data.split('\n')) {
-            let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)(?:\.git|$)/.exec(line)
-            if (match) {
-                let repo = match[1]
-                linkIssues(repo)
-                return
-            }
-        }
-        }
-        linkIssues("")
-    })
+    if (vscode.workspace.rootPath != undefined) {
+      let gconfig = path.join(vscode.workspace.rootPath, '.git', 'config')
+      fs.readFile(gconfig, 'utf-8', (err, data) => {
+          if (err == null) {
+          for (let line of data.split('\n')) {
+              let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)(?:\.git|$)/.exec(line)
+              if (match) {
+                  let repo = match[1]
+                  linkIssues(repo)
+                  return
+              }
+          }
+          }
+          linkIssues("")
+      })
+    }
 }
 
 // this method is called when your extension is deactivated
