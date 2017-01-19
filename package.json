@@ -2,7 +2,7 @@
     "name": "ghlink",
     "displayName": "Link Github Issues",
     "description": "Automatically link mentioned issue numbers (e.g. '#123') to github issues",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "dt",
     "engines": {
         "vscode": "^1.0.0"
@@ -15,10 +15,12 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "commands": [
+            {
+                "command": "extension.sayHello",
+                "title": "Hello World"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
