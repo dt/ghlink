@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }
 
-        let dispose = vscode.languages.registerDocumentLinkProvider('go', provider);
+        let dispose = vscode.languages.registerDocumentLinkProvider('*', provider);
         context.subscriptions.push(dispose);
     }
     if (vscode.workspace.rootPath != undefined) {
