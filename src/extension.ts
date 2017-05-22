@@ -39,9 +39,11 @@ export function activate(context: vscode.ExtensionContext) {
       fs.readFile(gconfig, 'utf-8', (err, data) => {
           if (err == null) {
           for (let line of data.split('\n')) {
-              let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)(?:\.git|$)/.exec(line)
+              let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)$/.exec(line)
               if (match) {
-                  let repo = match[1]
+                  let rawRepo = match[1]
+                  // Transform "dt/ghlink.git" into "dt/ghlink"
+                  let repo = rawRepo.endsWith('.git') ? rawRepo.substring(0, rawRepo.length - '.git'.length) : rawRepo
                   linkIssues(repo)
                   return
               }
