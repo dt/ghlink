@@ -5,8 +5,8 @@ import * as vscode from 'vscode'
 import { join } from 'path'
 import { promise as parseGitConfig } from 'parse-git-config'
 
-const REGEXP_ISSUES = /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
-const REGEXP_REPOS = /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)/g
+const REGEXP_ISSUES = /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)\b/g
+const REGEXP_REPOS = /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)\b/g
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
