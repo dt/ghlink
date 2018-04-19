@@ -1,57 +1,51 @@
 'use strict';
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as vscode from 'vscode'
+import { join } from 'path'
+import { promise as parseGitConfig } from 'parse-git-config'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-    function linkIssues(repo: string) {
-        let provider = {
-            provideDocumentLinks: function (document: vscode.TextDocument): vscode.DocumentLink[] {
-                let re = /([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
-                let txt = document.getText()
-                let res: vscode.DocumentLink[] = []
-                var match
-                while ((match = re.exec(txt)) !== null) {
-                    let p = document.positionAt(match.index)
-                    let r = new vscode.Range(p, p.translate(0, match[0].length + 1))
-                    if (match[1]) {
-                        let uri = vscode.Uri.parse("https://github.com/" + match[1] + "/issues/" + match[2])
-                        res.push(new vscode.DocumentLink(r, uri))
-                    } else if (repo.length > 0) {
-                        let uri = vscode.Uri.parse("https://github.com/" + repo + "/issues/" + match[2])
-                        res.push(new vscode.DocumentLink(r, uri))
-                    }
-                }
-                return res
-            }
-        }
+export async function activate(context: vscode.ExtensionContext) {
+    const originRepo = vscode.workspace.rootPath ? await parseRepoName(vscode.workspace.rootPath) : null
 
-        let dispose = vscode.languages.registerDocumentLinkProvider('*', provider);
-        context.subscriptions.push(dispose);
+    const disposable = vscode.languages.registerDocumentLinkProvider('*', {
+        provideDocumentLinks: function (document: vscode.TextDocument): vscode.DocumentLink[] {
+            return generateIssueLinks(document, originRepo)
+        }
+    });
+    context.subscriptions.push(disposable);
+}
+
+function generateIssueLinks(document: vscode.TextDocument, originRepo: string | null): vscode.DocumentLink[] {
+    const re = /([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
+    const txt = document.getText()
+    const res: vscode.DocumentLink[] = []
+    let match
+    while ((match = re.exec(txt)) !== null) {
+        const position = document.positionAt(match.index)
+        const range = new vscode.Range(position, position.translate(0, match[0].length))
+        const uri = vscode.Uri.parse(`https://github.com/${match[1] || originRepo}/issues/${match[2]}`)
+        res.push(new vscode.DocumentLink(range, uri))
     }
-    if (vscode.workspace.rootPath !== undefined) {
-        let gconfig = path.join(vscode.workspace.rootPath, '.git', 'config')
-        fs.readFile(gconfig, 'utf-8', (err, data) => {
-            if (err) {
-                linkIssues("")
-            } else {
-                for (let line of data.split('\n')) {
-                    let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)$/.exec(line)
-                    if (match) {
-                        let rawRepo = match[1]
-                        // Transform "dt/ghlink.git" into "dt/ghlink"
-                        let repo = rawRepo.endsWith('.git') ? rawRepo.substring(0, rawRepo.length - '.git'.length) : rawRepo
-                        linkIssues(repo)
-                        return
-                    }
-                }
-            }
-        })
+    return res
+}
+
+async function parseRepoName(directory: string): Promise<string | null> {
+    try {
+        const pathToConfig = join(directory, '.git', 'config')
+        const config = await parseGitConfig({ path: pathToConfig, expandKeys: true })
+        return urlToRepoName(config.remote.origin.url)
+    } catch {
+        return null
     }
+}
+
+function urlToRepoName(url: string): string | null {
+    const match = /.*github\.com\/([^\/]+\/[^\/]+)$/.exec(url)
+    // If there's a match, trim "dt/ghlink.git" -> "dt/ghlink"
+    return match ? match[1].replace(/\.git$/, '') : null
 }
 
 // this method is called when your extension is deactivated
