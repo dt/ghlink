@@ -2,7 +2,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,7 +10,7 @@ import * as path from 'path';
 export function activate(context: vscode.ExtensionContext) {
     function linkIssues(repo: string) {
         let provider = {
-            provideDocumentLinks: function (document: vscode.TextDocument, token: vscode.CancellationToken): vscode.DocumentLink[] {
+            provideDocumentLinks: function (document: vscode.TextDocument): vscode.DocumentLink[] {
                 let re = /([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
                 let txt = document.getText()
                 let res: vscode.DocumentLink[] = []
@@ -34,10 +33,12 @@ export function activate(context: vscode.ExtensionContext) {
         let dispose = vscode.languages.registerDocumentLinkProvider('*', provider);
         context.subscriptions.push(dispose);
     }
-    if (vscode.workspace.rootPath != undefined) {
+    if (vscode.workspace.rootPath !== undefined) {
         let gconfig = path.join(vscode.workspace.rootPath, '.git', 'config')
         fs.readFile(gconfig, 'utf-8', (err, data) => {
-            if (err == null) {
+            if (err) {
+                linkIssues("")
+            } else {
                 for (let line of data.split('\n')) {
                     let match = /\s*url\s*=.*github.com\/([^\/]+\/[^\/]+)$/.exec(line)
                     if (match) {
@@ -49,7 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
             }
-            linkIssues("")
         })
     }
 }
