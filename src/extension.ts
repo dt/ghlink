@@ -5,28 +5,33 @@ import * as vscode from 'vscode'
 import { join } from 'path'
 import { promise as parseGitConfig } from 'parse-git-config'
 
+const REGEXP_ISSUES = /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
+const REGEXP_REPOS = /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)/g
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-    const originRepo = vscode.workspace.rootPath ? await parseRepoName(vscode.workspace.rootPath) : null
+    const currentRepo = vscode.workspace.rootPath ? await parseRepoName(vscode.workspace.rootPath) : null
 
     const disposable = vscode.languages.registerDocumentLinkProvider('*', {
         provideDocumentLinks: function (document: vscode.TextDocument): vscode.DocumentLink[] {
-            return generateIssueLinks(document, originRepo)
+            return [
+                ...generateLinks(document, REGEXP_ISSUES, match => `https://github.com/${match[1] || currentRepo}/issues/${match[2]}`),
+                ...generateLinks(document, REGEXP_REPOS, match => `https://github.com/${match[1]}`)
+            ]
         }
     });
     context.subscriptions.push(disposable);
 }
 
-function generateIssueLinks(document: vscode.TextDocument, originRepo: string | null): vscode.DocumentLink[] {
-    const re = /([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)/g
+function generateLinks(document: vscode.TextDocument, re: RegExp, matchToUrl: (match: RegExpExecArray) => string): vscode.DocumentLink[] {
     const txt = document.getText()
     const res: vscode.DocumentLink[] = []
     let match
     while ((match = re.exec(txt)) !== null) {
         const position = document.positionAt(match.index)
         const range = new vscode.Range(position, position.translate(0, match[0].length))
-        const uri = vscode.Uri.parse(`https://github.com/${match[1] || originRepo}/issues/${match[2]}`)
+        const uri = vscode.Uri.parse(matchToUrl(match))
         res.push(new vscode.DocumentLink(range, uri))
     }
     return res

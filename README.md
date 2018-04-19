@@ -4,10 +4,8 @@ Link to mentioned issues (and pull requests) on Github.
 
 ## Features
 
-Links any `user/repo#issue` to the issue (or pull request) on Github.
+Marks the following text in your files as links:
 
-Additionally, if the workspace root contains a `.git/config` that mentions
-a github.com remote, then it will also link plain issue and pull request numbers
-(e.g. "fixed in #123") to that issue in that repository.
-
-
+- `user/repo#123` - links to the issue or PR
+- `#123` if `.git/config` includes a GitHub remote
+- `@user/repo` - links to the GitHub repo page
