@@ -43,7 +43,7 @@ function generateLinks(document: vscode.TextDocument, re: RegExp, matchToUrl: (m
 async function parseRepoName(directory: string): Promise<string | null> {
     try {
         const pathToConfig = join(directory, '.git', 'config')
-        const config = await parseGitConfig({ path: pathToConfig, expandKeys: true })
+        const config = await parseGitConfig({ path: pathToConfig, expandKeys: true }) || {}
 
         // First, check whether `origin` remote is on GitHub.
         const originRepoName = config.remote.origin && urlToRepoName(config.remote.origin.url)
