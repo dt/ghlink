@@ -4,7 +4,11 @@
     "description": "Automatically link mentioned issue numbers (e.g. '#123') to github issues",
     "version": "1.0.0",
     "publisher": "dt",
-    "icon": "icon.svg",
+    "icon": "icon.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dt/ghlink.git"
+    },
     "engines": {
         "vscode": "^1.22.0"
     },
