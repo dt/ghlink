@@ -2,24 +2,42 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
-import { join } from 'path'
+import { join, basename } from 'path'
 import { promise as parseGitConfig } from 'parse-git-config'
 
-const REGEXP_REPOS = /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)\b/g
-const REGEXP_ISSUES = /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)\b/g
+interface LinkConfig {
+    re: RegExp,
+    isEnabled: () => boolean,
+    matchToUrl: (match: RegExpExecArray) => string | null
+}
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
     const currentRepo = vscode.workspace.rootPath ? await parseRepoName(vscode.workspace.rootPath) : null
 
     const disposable = vscode.languages.registerDocumentLinkProvider('*', {
         provideDocumentLinks: function (document: vscode.TextDocument): vscode.DocumentLink[] {
-            return [
-                ...generateLinks(document, REGEXP_REPOS, match => `https://github.com/${match[1]}`),
-                ...generateLinks(document, REGEXP_ISSUES, match => (match[1] || currentRepo) ?
-                    `https://github.com/${match[1] || currentRepo}/issues/${match[2]}` : null)
+            const linkConfigs: LinkConfig[] = [
+
+                // @user/repo
+                {
+                    re: /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)\b/g,
+                    isEnabled: () => basename(document.fileName) !== 'package.json',
+                    matchToUrl: match => `https://github.com/${match[1]}`
+                },
+
+                // #123 and user/repo#123
+                {
+                    re: /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)\b/g,
+                    isEnabled: () => true,
+                    matchToUrl: match => (match[1] || currentRepo) ? `https://github.com/${match[1] || currentRepo}/issues/${match[2]}` : null
+                }
             ]
+
+            const linkArrays = linkConfigs.map(c => c.isEnabled()
+                ? generateLinks(document, c.re, c.matchToUrl)
+                : [])
+
+            return Array.prototype.concat(...linkArrays)
         }
     });
     context.subscriptions.push(disposable);
@@ -27,17 +45,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function generateLinks(document: vscode.TextDocument, re: RegExp, matchToUrl: (match: RegExpExecArray) => string | null): vscode.DocumentLink[] {
     const txt = document.getText()
-    const res: vscode.DocumentLink[] = []
+    const result: vscode.DocumentLink[] = []
     let match
     while ((match = re.exec(txt)) !== null) {
         const url = matchToUrl(match)
         if (url) {
             const position = document.positionAt(match.index)
             const range = new vscode.Range(position, position.translate(0, match[0].length))
-            res.push(new vscode.DocumentLink(range, vscode.Uri.parse(url)))
+            result.push(new vscode.DocumentLink(range, vscode.Uri.parse(url)))
         }
     }
-    return res
+    return result
 }
 
 async function parseRepoName(directory: string): Promise<string | null> {
@@ -70,5 +88,4 @@ function urlToRepoName(url: string): string | null {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {
-}
+export function deactivate() {}
