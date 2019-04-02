@@ -2,7 +2,7 @@
     "name": "ghlink",
     "displayName": "Link Github Issues",
     "description": "Automatically link mentioned issue numbers (e.g. '#123') to github issues",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "publisher": "dt",
     "icon": "icon.png",
     "repository": {
