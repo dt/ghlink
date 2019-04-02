@@ -20,14 +20,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 // @user/repo
                 {
-                    re: /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)\b/g,
+                    re: /@([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-.]+)\b/g,
                     isEnabled: () => basename(document.fileName) !== 'package.json',
                     matchToUrl: match => `https://github.com/${match[1]}`
                 },
 
                 // #123 and user/repo#123
                 {
-                    re: /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-]+)?#(\d+)\b/g,
+                    re: /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-.]+)?#(\d+)\b/g,
                     isEnabled: () => true,
                     matchToUrl: match => (match[1] || currentRepo) ? `https://github.com/${match[1] || currentRepo}/issues/${match[2]}` : null
                 }
