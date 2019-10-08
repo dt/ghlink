@@ -82,7 +82,7 @@ async function parseRepoName(directory: string): Promise<string | null> {
 }
 
 function urlToRepoName(url: string): string | null {
-    const match = /.*github\.com\/([^\/]+\/[^\/]+)$/.exec(url)
+    const match = /.*github\.com[\/:]([^\/]+\/[^\/]+)$/.exec(url)
     // If there's a match, trim "dt/ghlink.git" -> "dt/ghlink"
     return match ? match[1].replace(/\.git$/, '') : null
 }
