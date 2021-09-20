@@ -30,6 +30,13 @@ export async function activate(context: vscode.ExtensionContext) {
                     re: /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-.]+)?#(\d+)\b/g,
                     isEnabled: () => true,
                     matchToUrl: match => (match[1] || currentRepo) ? `https://github.com/${match[1] || currentRepo}/issues/${match[2]}` : null
+                },
+
+                // user/repo:sha and user/repo@sha
+                {
+                    re: /@?([a-zA-Z0-9_\-]+\/[a-zA-Z0-9_\-.]+)[:@]([0-9A-Fa-f]{4,})\b/g,
+                    isEnabled: () => true,
+                    matchToUrl: match => match[1] ? `https://github.com/${match[1]}/commit/${match[2]}` : null
                 }
             ]
 
